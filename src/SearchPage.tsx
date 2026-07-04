@@ -95,7 +95,7 @@ const SearchPage = ({ keyword, onListingClick, onShopClick }: SearchPageProps) =
           <div className="flex items-center gap-3 mb-1">
             <p className="text-sky-500 font-black text-[10px] uppercase tracking-widest">Target Keyword</p>
             <div className="cursor-pointer" onClick={handleKeywordFollow} title="Save Search"><HeartIcon isTracked={searchData.is_tracked} /></div>
-            <button onClick={() => fetchData(keyword, false, true)} className="text-zinc-500 hover:text-sky-400 transition cursor-pointer ml-2" title="Refresh Data">
+            <button onClick={() => fetchData(keyword, false, true)} className="text-zinc-500 hover:text-sky-400 transition cursor-pointer ml-2" title="Force Refresh">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </button>
           </div>

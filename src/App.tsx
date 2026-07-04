@@ -5,6 +5,7 @@ import SearchPage from './SearchPage';
 import ListPage from './ListPage';
 import ComparePage from './ComparePage';
 import LoginPage from './LoginPage';
+import LandingPage from './LandingPage';
 import ProfilePage from './ProfilePage';
 import UploadProductPage from './UploadProductPage';
 import AdminDashboard from './AdminDashboard';
@@ -34,6 +35,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [errorData, setErrorData] = useState<string | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
 
   // Bu state'ler kendi sayfalarına taşınacak.
   // const [sortBy, setSortBy] = useState<string>('default');
@@ -293,7 +295,10 @@ const App = () => {
   }
 
   if (currentUser === null) {
-    return <LoginPage />;
+    if (showLogin) {
+      return <LoginPage />;
+    }
+    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
   }
 
   return (

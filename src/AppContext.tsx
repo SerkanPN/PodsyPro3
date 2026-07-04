@@ -15,6 +15,7 @@ interface AppContextType {
   session: Session | null;
   logout: () => void;
   isAdmin: boolean;
+  supabase: any;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -153,7 +154,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return 0;
   };
 
-  const value = { favData, historyData, fetchFavorites, fetchHistory, toggleFollow, HeartIcon, resolvePrice, currentUser, session, logout, isAdmin };
+  const value = { favData, historyData, fetchFavorites, fetchHistory, toggleFollow, HeartIcon, resolvePrice, currentUser, session, logout, isAdmin, supabase };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

@@ -1,4 +1,3 @@
-// src/ShopDetail.tsx
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useAppContext } from './AppContext';
 import { API_BASE_URL } from './config';
@@ -39,7 +38,7 @@ const formatTS = (ts: number | null) => {
 };
 
 const copyToClipboard = (text: string) => {
-  navigator.clipboard.writeText(text).then(() => alert("Kopyalandı!"));
+  navigator.clipboard.writeText(text).then(() => alert("Copied"));
 };
 
 const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetailProps) => {
@@ -50,7 +49,7 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
 
   const fetchData = useCallback(async (id: string, forceRefresh = false) => {
     if (!id || id === 'null') {
-      setError("Geçersiz veya kopmuş mağaza bağlantısı. Lütfen profilinizden bu mağazayı silin ve tekrar bağlayın.");
+      setError("Invalid shop link. Please verify setup.");
       setLoading(false);
       return;
     }
@@ -62,7 +61,7 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
       const res = await fetch(`${API_BASE_URL}/shop/${id}?force_refresh=${forceRefresh}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error("Mağaza verisi alınamadı");
+      if (!res.ok) throw new Error("Shop data could not be fetched");
       const json = await res.json();
       if(json.ERROR) throw new Error(typeof json.ERROR === 'string' ? json.ERROR : JSON.stringify(json.ERROR));
       setData(json);
@@ -83,35 +82,31 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
 
   const [showModal, setShowModal] = useState(false);
   const chartRef = useRef<HTMLCanvasElement>(null);
-  const chartInstance = useRef<any>(null);
   const history = data?.history || [];
-  const all_history_json = JSON.stringify(history);
 
   const [sortBy, setSortBy] = useState<string>('default');
 
-  // --- ADVANCED ANALYTICS CALCULATIONS (useMemo ile optimize edildi) ---
   const createdTs = S.created_timestamp || (Date.now() / 1000);
   const daysActive = Math.max(1, (Date.now() / 1000 - createdTs) / (24 * 60 * 60));
   const dailySales = (S.transaction_sold_count || 0) / daysActive;
   const monthlySales = (dailySales * 30).toFixed(1);
   
   const isSalesVisible = S.transaction_sold_count > 0; 
-  const salesVisibilityText = isSalesVisible ? "GÖRÜNÜR (Takip Ediliyor)" : "GİZLİ / SIFIR";
+  const salesVisibilityText = isSalesVisible ? "VISIBLE" : "HIDDEN";
   const salesVisibilityColor = isSalesVisible ? "text-emerald-400" : "text-rose-400";
-  // ----------------------------------------
 
   const chartData = useMemo(() => {
     if (!history || history.length === 0) return { labels: [], datasets: [] };
 
     const reversedHistory = [...history].reverse();
     const labels = reversedHistory.map((d: any) => new Date(d.capture_time).toLocaleDateString());
-    const data = reversedHistory.map((d: any) => d.transaction_sold_count);
+    const dataPoints = reversedHistory.map((d: any) => d.transaction_sold_count);
 
     return {
       labels,
       datasets: [{
-        label: 'Toplam Satış',
-        data,
+        label: 'Total Sales',
+        data: dataPoints,
         borderColor: '#10b981',
         backgroundColor: '#10b98120',
         fill: true,
@@ -165,41 +160,39 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
     });
   }, [toggleFollow]);
 
-  if (loading) return <div className="text-white text-center mt-20 font-black animate-pulse">MAĞAZA VERİSİ YÜKLENİYOR...</div>;
-  if (error) return <div className="text-red-500 text-center mt-20">Hata: {error}</div>;
-  if (!data) return <div className="text-zinc-500 text-center mt-20">Veri bulunamadı.</div>;
+  if (loading) return <div className="text-white text-center mt-20 font-black animate-pulse">LOADING DATA...</div>;
+  if (error) return <div className="text-red-500 text-center mt-20">Error: {error}</div>;
+  if (!data) return <div className="text-zinc-500 text-center mt-20">No data found.</div>;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4 sm:px-6 lg:px-8 animate-[fadeIn_0.5s]">
-      {/* HEADER / BACK BUTTON */}
       <div className="flex items-center justify-between border-b border-[#3a3a3a] pb-6">
         <button onClick={onBack} className="group flex items-center space-x-2 text-gray-400 hover:text-white transition cursor-pointer bg-transparent border-none p-0">
           <div className="p-2 bg-[#2a2a2a] group-hover:bg-[#333] rounded-lg transition border border-[#3a3a3a]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
           </div>
-          <span className="font-black text-sm tracking-wide">GERİ DÖN</span>
+          <span className="font-black text-sm tracking-wide">BACK</span>
         </button>
         <div className="flex space-x-3">
           <button onClick={() => fetchData(shopId, true)} className="px-4 py-2 bg-zinc-800 rounded-xl hover:bg-zinc-700 transition font-black text-xs flex items-center space-x-2 text-white shadow-lg cursor-pointer border border-zinc-700">
              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-             <span className="hidden sm:inline">GÜNCELLE</span>
+             <span className="hidden sm:inline">REFRESH</span>
           </button>
           <button onClick={handleShopFollow} className={`px-4 py-2 rounded-xl transition font-black text-xs flex items-center space-x-2 shadow-lg cursor-pointer ${S.is_tracked ? 'bg-rose-600 hover:bg-rose-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
             <HeartIcon isTracked={S.is_tracked} />
-            <span className="hidden sm:inline">{S.is_tracked ? 'UNFOLLOW SHOP' : 'FOLLOW SHOP'}</span>
+            <span className="hidden sm:inline">{S.is_tracked ? 'UNFOLLOW' : 'FOLLOW'}</span>
           </button>
           <a href={S.url} target="_blank" rel="noreferrer" className="px-6 py-2 bg-sky-600 rounded-xl hover:bg-sky-700 transition font-black text-xs flex items-center cursor-pointer text-white shadow-lg shadow-sky-900/20">
-            MAĞAZAYA GİT ↗
+            VISIT SHOP ↗
           </a>
           {onUploadClick && (
             <button onClick={() => onUploadClick(shopId)} className="px-6 py-2 bg-emerald-600 rounded-xl hover:bg-emerald-500 transition font-black text-xs flex items-center cursor-pointer text-white shadow-lg shadow-emerald-900/20 border border-emerald-500">
-              ÜRÜN YÜKLE
+              UPLOAD PRODUCT
             </button>
           )}
         </div>
       </div>
       
-      {/* SHOP HERO CARD */}
       <div className="bg-[#2a2a2a] rounded-3xl border border-sky-500/20 p-8 md:p-12 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <svg className="w-64 h-64 text-sky-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 001-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd"></path></svg>
@@ -226,48 +219,47 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
               </div>
               <div className="bg-[#1a1a1a] p-4 rounded-2xl border border-[#333] text-center shrink-0">
                 <div className="text-rose-500 font-black text-xl">{S.review_average ? `${S.review_average.toFixed(1)} ⭐` : 'N/A'}</div>
-                <div className="text-[10px] font-bold text-gray-500 uppercase mt-1">{S.review_count?.toLocaleString() || 0} Değerlendirme</div>
+                <div className="text-[10px] font-bold text-gray-500 uppercase mt-1">{S.review_count?.toLocaleString() || 0} Reviews</div>
               </div>
             </div>
             
             <div className="flex flex-wrap justify-center md:justify-start gap-3">
               <div className="bg-[#1a1a1a] px-4 py-2 rounded-xl border border-[#333] flex items-center gap-2">
                 <span className="text-emerald-500 font-black text-lg">{S.listing_active_count}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Aktif Ürün</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Active Listings</span>
               </div>
               <div className="bg-[#1a1a1a] px-4 py-2 rounded-xl border border-[#333] flex items-center gap-2">
                 <span className="text-sky-500 font-black text-lg">{S.digital_listing_count || 0}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Dijital Ürün</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Digital Listings</span>
               </div>
               <div className="bg-[#1a1a1a] px-4 py-2 rounded-xl border border-[#333] flex items-center gap-2">
                 <span className="text-amber-500 font-black text-lg">{S.transaction_sold_count?.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Satış</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sales</span>
               </div>
               <div className="bg-[#1a1a1a] px-4 py-2 rounded-xl border border-[#333] flex items-center gap-2">
                 <span className="text-rose-500 font-black text-lg">❤️ {S.num_favorers || 0}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Favori</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Favorites</span>
               </div>
               {S.is_vacation && (
                 <div className="bg-rose-900/20 px-4 py-2 rounded-xl border border-rose-900/30 flex items-center gap-2">
-                  <span className="text-rose-500 font-black text-[10px] uppercase">TATİL MODUNDA</span>
+                  <span className="text-rose-500 font-black text-[10px] uppercase">ON VACATION</span>
                 </div>
               )}
             </div>
 
-            {/* ADVANCED CALCULATIONS */}
             <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4 border-t border-[#333] pt-4">
               <div className="bg-[#1a1a1a] px-4 py-2 rounded-xl border border-[#333] flex items-center gap-2">
                 <span className="text-amber-500 font-black text-lg">{monthlySales}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Aylık Ort. Satış</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Monthly Avg Sales</span>
               </div>
               <div className="bg-[#1a1a1a] px-4 py-2 rounded-xl border border-[#333] flex items-center gap-2">
                 <span className={`font-black text-sm ${salesVisibilityColor}`}>{salesVisibilityText}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Satış Görünürlüğü</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Sales Visibility</span>
               </div>
               {history && history.length > 0 && (
                 <button onClick={() => setShowModal(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold text-[10px] transition uppercase cursor-pointer shadow-lg shadow-emerald-900/20 flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
-                  Mağaza Grafiğini Gör
+                  View Shop Chart
                 </button>
               )}
             </div>
@@ -276,37 +268,36 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
         </div>
       </div>
 
-      {/* MESSAGES & ANNOUNCEMENTS ACCORDION */}
       <details className="bg-transparent group" open>
         <summary className="p-4 cursor-pointer list-none flex justify-between items-center select-none bg-[#2a2a2a] rounded-2xl border border-[#3a3a3a] mb-6 hover:bg-[#333] transition">
-          <h2 className="text-lg font-black italic text-white uppercase tracking-tighter">Duyurular ve Mesajlar</h2>
+          <h2 className="text-lg font-black italic text-white uppercase tracking-tighter">Announcements & Messages</h2>
           <svg className="w-6 h-6 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
         </summary>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="bg-[#2a2a2a] rounded-3xl border border-[#3a3a3a] overflow-hidden shadow-2xl flex flex-col">
             <div className="p-5 border-b border-[#3a3a3a] bg-[#2d2d2d]">
-              <h2 className="text-sm font-black italic text-sky-400 uppercase tracking-tighter">Mağaza Duyurusu</h2>
+              <h2 className="text-sm font-black italic text-sky-400 uppercase tracking-tighter">Shop Announcement</h2>
             </div>
             <div className="p-6 flex-1 max-h-[350px] overflow-y-auto custom-scrollbar">
-              <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{S.announcement || "Duyuru bulunmuyor."}</p>
+              <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{S.announcement || "No announcements."}</p>
             </div>
           </div>
           
           <div className="bg-[#2a2a2a] rounded-3xl border border-[#3a3a3a] overflow-hidden shadow-2xl flex flex-col">
             <div className="p-5 border-b border-[#3a3a3a] bg-[#2d2d2d]">
-              <h2 className="text-sm font-black italic text-emerald-500 uppercase tracking-tighter">Satış Mesajı</h2>
+              <h2 className="text-sm font-black italic text-emerald-500 uppercase tracking-tighter">Sales Message</h2>
             </div>
             <div className="p-6 flex-1 max-h-[350px] overflow-y-auto custom-scrollbar">
-              <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{S.sale_message || "Satış mesajı bulunmuyor."}</p>
+              <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{S.sale_message || "No sales message."}</p>
             </div>
           </div>
 
           <div className="bg-[#2a2a2a] rounded-3xl border border-[#3a3a3a] overflow-hidden shadow-2xl flex flex-col">
             <div className="p-5 border-b border-[#3a3a3a] bg-[#2d2d2d]">
-              <h2 className="text-sm font-black italic text-amber-500 uppercase tracking-tighter">Dijital Satış Mesajı</h2>
+              <h2 className="text-sm font-black italic text-amber-500 uppercase tracking-tighter">Digital Sales Message</h2>
             </div>
             <div className="p-6 flex-1 max-h-[350px] overflow-y-auto custom-scrollbar">
-              <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{S.digital_sale_message || "Dijital satış mesajı bulunmuyor."}</p>
+              <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{S.digital_sale_message || "No digital sales message."}</p>
             </div>
           </div>
         </div>
@@ -314,11 +305,10 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* LEFT COLUMN - POLICIES */}
         <div className="lg:col-span-2 space-y-6">
           <details className="bg-[#2a2a2a] rounded-3xl border border-[#3a3a3a] overflow-hidden shadow-2xl group" open>
             <summary className="p-6 border-b border-[#3a3a3a] bg-[#2d2d2d] cursor-pointer list-none flex justify-between items-center select-none hover:bg-[#333] transition">
-              <h2 className="text-xl font-black italic text-sky-400 uppercase tracking-tighter">Mağaza Politikaları</h2>
+              <h2 className="text-xl font-black italic text-sky-400 uppercase tracking-tighter">Shop Policies</h2>
               <svg className="w-6 h-6 text-sky-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </summary>
             
@@ -348,7 +338,6 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
                 </div>
               )}
 
-              {/* Long Policies in sub-accordions */}
               {S.policy_additional && (
                 <details className="bg-[#1a1a1a] rounded-xl border border-[#333] overflow-hidden group/policy">
                   <summary className="p-4 cursor-pointer list-none flex justify-between items-center select-none hover:bg-[#222]">
@@ -376,7 +365,6 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
           </details>
         </div>
 
-        {/* RIGHT COLUMN - ATTRIBUTES & LOGISTICS */}
         <div className="space-y-6">
           <details className="bg-[#2a2a2a] rounded-3xl border border-[#3a3a3a] shadow-2xl overflow-hidden group" open>
             <summary className="p-6 border-b border-[#3a3a3a] cursor-pointer list-none flex justify-between items-center select-none hover:bg-[#333] transition">
@@ -384,11 +372,11 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
               <svg className="w-5 h-5 text-sky-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </summary>
             <div className="p-6 space-y-3 text-sm font-mono uppercase text-[10px]">
-              <div className="flex justify-between border-b border-[#333] pb-2 text-white"><span>Mağaza Ülkesi</span><span className="font-bold text-right text-sky-400">{S.shop_location_country_iso}</span></div>
-              <div className="flex justify-between border-b border-[#333] pb-2 text-white"><span>Gönderim Ülkesi</span><span className="font-bold text-right text-emerald-400">{S.shipping_from_country_iso}</span></div>
-              <div className="flex justify-between border-b border-[#333] pb-2 text-white"><span>Para Birimi</span><span className="font-bold text-right">{S.currency_code}</span></div>
+              <div className="flex justify-between border-b border-[#333] pb-2 text-white"><span>Shop Country</span><span className="font-bold text-right text-sky-400">{S.shop_location_country_iso}</span></div>
+              <div className="flex justify-between border-b border-[#333] pb-2 text-white"><span>Shipping Country</span><span className="font-bold text-right text-emerald-400">{S.shipping_from_country_iso}</span></div>
+              <div className="flex justify-between border-b border-[#333] pb-2 text-white"><span>Currency</span><span className="font-bold text-right">{S.currency_code}</span></div>
               <div className="flex flex-col border-b border-[#333] pb-2 text-white gap-2">
-                <span>Desteklenen Diller:</span>
+                <span>Supported Languages:</span>
                 <div className="flex flex-wrap gap-1 justify-end">
                   {S.languages?.map((lang: string, i: number) => (
                     <span key={i} className="bg-[#1a1a1a] px-2 py-1 border border-[#333] rounded text-[9px]">{lang}</span>
@@ -441,11 +429,10 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
         </div>
       </div>
 
-      {/* SHOP LISTINGS */}
       {shopListings.length > 0 && (
         <details className="bg-[#2a2a2a] rounded-3xl border border-[#3a3a3a] shadow-2xl overflow-hidden group" open>
           <summary className="p-6 md:p-8 border-b border-[#3a3a3a] cursor-pointer list-none flex justify-between items-center select-none hover:bg-[#333] transition">
-            <h2 className="text-2xl font-black italic text-sky-400 uppercase tracking-tighter">Mağaza Ürünleri ({shopListings.length})</h2>
+            <h2 className="text-2xl font-black italic text-sky-400 uppercase tracking-tighter">Shop Listings ({shopListings.length})</h2>
             
             <div className="flex items-center gap-4">
               <select 
@@ -454,13 +441,13 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
                 onClick={(e) => e.stopPropagation()}
                 className="bg-[#1a1a1a] border border-[#333] text-zinc-300 text-[11px] font-bold rounded-lg px-3 py-2 outline-none focus:border-sky-500 cursor-pointer uppercase tracking-wider"
               >
-                <option value="default">SIRALAMA: Varsayılan</option>
-                <option value="favorites">SIRALAMA: En Çok Favori</option>
-                <option value="views">SIRALAMA: En Çok İzlenen</option>
-                <option value="price_asc">SIRALAMA: En Düşük Fiyat</option>
-                <option value="price_desc">SIRALAMA: En Yüksek Fiyat</option>
-                <option value="reviews">SIRALAMA: Yorum Sayısı</option>
-                <option value="featured">SIRALAMA: Öne Çıkma Sırası</option>
+                <option value="default">SORT: Relevance</option>
+                <option value="favorites">SORT: Most Favorites</option>
+                <option value="views">SORT: Most Views</option>
+                <option value="price_asc">SORT: Lowest Price</option>
+                <option value="price_desc">SORT: Highest Price</option>
+                <option value="reviews">SORT: Review Count</option>
+                <option value="featured">SORT: Featured Rank</option>
               </select>
               <svg className="w-6 h-6 text-sky-400 group-open:rotate-180 transition-transform pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
@@ -470,7 +457,7 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
               const img_url = item.img_url || item.image || item.image_url || '';
               return (
                 <div key={i} onClick={() => onListingClick(item.listing_id)} className="bg-[#1a1a1a] rounded-2xl border border-[#333] overflow-hidden hover:border-sky-500 transition group flex flex-col shadow-lg cursor-pointer relative">
-                  <div className="absolute top-2 left-2 z-10" title="Takibe Al" onClick={(e) => handleListingFollow(item.listing_id, e)}>
+                  <div className="absolute top-2 left-2 z-10" title="Track" onClick={(e) => handleListingFollow(item.listing_id, e)}>
                     <HeartIcon isTracked={item.is_tracked} />
                   </div>
                   <div className="relative aspect-square overflow-hidden bg-[#222]">
@@ -495,7 +482,6 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
         </details>
       )}
 
-      {/* METADATA */}
       <details className="bg-black/20 rounded-3xl border border-[#3a3a3a] overflow-hidden group">
         <summary className="p-6 md:p-8 border-b border-[#333] cursor-pointer list-none flex justify-between items-center select-none hover:bg-[#222] transition">
           <h2 className="text-xl font-black italic text-gray-600 uppercase tracking-tighter font-sans">Shop Metadata Engine</h2>
@@ -510,11 +496,10 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
         </div>
       </details>
 
-      {/* GRAPH MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4 sm:p-8 backdrop-blur-sm">
           <div className="bg-zinc-900 w-full max-w-6xl rounded-3xl border border-zinc-800 p-6 sm:p-10 relative flex flex-col h-[90vh] shadow-2xl">
-            <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-white uppercase font-black text-xs transition cursor-pointer">Kapat [ESC]</button>
+            <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 text-zinc-500 hover:text-white uppercase font-black text-xs transition cursor-pointer">Close [ESC]</button>
             <h2 className="text-2xl sm:text-3xl font-black italic text-emerald-500 uppercase tracking-tighter mb-6 sm:mb-8 mt-4 sm:mt-0">Shop Sales History</h2>
             <div className="flex-grow bg-zinc-950 rounded-2xl p-4 sm:p-6 border border-zinc-800 relative min-h-[300px]">
               <Line options={chartOptions} data={chartData} />
@@ -523,7 +508,6 @@ const ShopDetail = ({ shopId, onBack, onListingClick, onUploadClick }: ShopDetai
         </div>
       )}
 
-      {/* RAW DUMP */}
       <div className="mt-10">
         <details className="bg-black/50 rounded-3xl border border-green-900/20 group text-center">
           <summary className="p-6 cursor-pointer text-green-900 font-black uppercase text-[10px] list-none tracking-[0.5em] tracking-tighter">RAW SHOP DATA DUMP</summary>

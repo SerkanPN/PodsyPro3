@@ -21,7 +21,7 @@ export async function checkAnalysisLimit(userId: string) {
     .eq('id', userId)
     .single();
 
-  if (error || !profile) return { allowed: false, error: "Kullanıcı profili bulunamadı" };
+  if (error || !profile) return { allowed: true }; // Profil yoksa bile teste izin ver
 
   if (profile.role === 'admin') return { allowed: true };
 

@@ -2,6 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
 import { supabaseAdmin } from '../_lib/supabase.js';
 import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL, injectTrackingStatusToListings } from '../_lib/etsy.js';
+import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,7 +20,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const shopId = Array.isArray(req.query.shop_id) ? req.query.shop_id[0] : (req.query.shop_id as string);
     const forceRefresh = req.query.force_refresh === 'true';
 
-    // Cache Control
     const { data: cached } = await supabaseAdmin
       .from('full_json_cache')
       .select('data')
@@ -57,10 +57,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
-    const shopRes = await fetch(`${ETSY_BASE_URL}/shops/${shopId}`, { headers: { "x-api-key": authString } });
-    if (!shopRes.ok) return res.json({ ERROR: { http_error: shopRes.status, msg: await shopRes.text() } });
+    let shopCore;
+    try {
+      const shopRes = await axios.get(`${ETSY_BASE_URL}/shops/${shopId}`, { headers: { "x-api-key": authString } });
+      shopCore = shopRes.data;
+    } catch (apiErr: any) {
+      return res.json({ ERROR: { http_error: apiErr.response?.status || 500, msg: apiErr.response?.data || apiErr.message } });
+    }
 
-    const shopCore = await shopRes.json();
     const iconUrl = shopCore.icon_url_fullxfull || "";
     
     await supabaseAdmin.from('shops').upsert({
@@ -70,8 +74,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       last_scan: new Date().toISOString()
     }, { onConflict: 'shop_id' });
 
-    const listingsRes = await fetch(`${ETSY_BASE_URL}/shops/${shopId}/listings/active?limit=50&includes=Images`, { headers: { "x-api-key": authString } });
-    const rawListings = listingsRes.ok ? (await listingsRes.json()).results || [] : [];
+    let rawListings = [];
+    try {
+      const listingsRes = await axios.get(`${ETSY_BASE_URL}/shops/${shopId}/listings/active?limit=50&includes=Images`, { headers: { "x-api-key": authString } });
+      rawListings = listingsRes.data.results || [];
+    } catch {}
     
     const parsedShopListings = [];
     

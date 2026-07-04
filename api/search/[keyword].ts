@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
-import { supabaseAdmin } from '../_lib/supabase.js';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL, injectTrackingStatusToListings } from '../_lib/etsy.js';
+import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth';
+import { supabaseAdmin } from '../_lib/supabase';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL, injectTrackingStatusToListings } from '../_lib/etsy';
 import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -50,19 +50,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
-    let etsyData;
-    
+    let etsyResponse;
     try {
-      const etsyRes = await axios.get(`${ETSY_BASE_URL}/listings/active?keywords=${encodeURIComponent(keyword)}&limit=100&offset=${offset}&includes=Images,Shop&sort_on=score&sort_order=desc`, {
+      const resApi = await axios.get(`${ETSY_BASE_URL}/listings/active?keywords=${encodeURIComponent(keyword)}&limit=100&offset=${offset}&includes=Images,Shop&sort_on=score&sort_order=desc`, {
         headers: { "x-api-key": authString }
       });
-      etsyData = etsyRes.data;
-    } catch (apiErr: any) {
-      return res.json({ http_error: apiErr.response?.status || 500, msg: apiErr.response?.data || apiErr.message });
+      etsyResponse = resApi.data;
+    } catch (err: any) {
+      return res.json({ http_error: err.response?.status || 500, msg: err.response?.data || err.message });
     }
     
-    const count = etsyData.count || 0;
-    const results = etsyData.results || [];
+    const count = etsyResponse.count || 0;
+    const results = etsyResponse.results || [];
     
     if (offset === 0) {
       await supabaseAdmin.from('keywords').upsert({ 

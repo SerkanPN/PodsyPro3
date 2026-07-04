@@ -2,6 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
 import { supabaseAdmin } from '../_lib/supabase.js';
 import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy.js';
+import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,7 +20,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const listingId = Array.isArray(req.query.listing_id) ? req.query.listing_id[0] : (req.query.listing_id as string);
     const forceRefresh = req.query.force_refresh === 'true';
 
-    // Cache Control
     const { data: cached } = await supabaseAdmin
       .from('full_json_cache')
       .select('data')
@@ -51,12 +51,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
-    const coreRes = await fetch(`${ETSY_BASE_URL}/listings/${listingId}?includes=Images,Shop,Videos,Inventory`, { headers: { "x-api-key": authString } });
-    if (!coreRes.ok) return res.json({ ERROR: { http_error: coreRes.status, msg: await coreRes.text() } });
-    const core = await coreRes.json();
+    
+    let core;
+    try {
+      const coreRes = await axios.get(`${ETSY_BASE_URL}/listings/${listingId}?includes=Images,Shop,Videos,Inventory`, {
+        headers: { "x-api-key": authString }
+      });
+      core = coreRes.data;
+    } catch (apiErr: any) {
+      return res.json({ ERROR: { http_error: apiErr.response?.status || 500, msg: apiErr.response?.data || apiErr.message } });
+    }
 
-    const reviewsRes = await fetch(`${ETSY_BASE_URL}/listings/${listingId}/reviews`, { headers: { "x-api-key": authString } });
-    const reviews = reviewsRes.ok ? await reviewsRes.json() : {};
+    let reviews = {};
+    try {
+      const reviewsRes = await axios.get(`${ETSY_BASE_URL}/listings/${listingId}/reviews`, {
+        headers: { "x-api-key": authString }
+      });
+      reviews = reviewsRes.data;
+    } catch {}
 
     const p_data = core.price || {};
     const price_val = p_data ? (parseFloat(p_data.amount || 0) / parseFloat(p_data.divisor || 1)) : 0.0;

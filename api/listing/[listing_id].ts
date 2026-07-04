@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth';
-import { supabaseAdmin } from '../_lib/supabase';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy';
+import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
+import { supabaseAdmin } from '../_lib/supabase.js';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy.js';
 import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -9,6 +9,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ detail: "Method not allowed" });
+
+  if (!supabaseAdmin) {
+    return res.status(500).json({ error: "Supabase configuration variables are missing on backend" });
+  }
 
   try {
     const user = await getUserFromToken(req);
@@ -59,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       core = coreRes.data;
     } catch (err: any) {
-      return res.json({ ERROR: { http_error: err.response?.status || 500, msg: err.response?.data || err.message } });
+      return res.status(500).json({ error: err.response?.data || err.message });
     }
 
     let reviews = {};

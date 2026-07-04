@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUserFromToken } from '../../_lib/auth.js';
-import { supabaseAdmin } from '../../_lib/supabase.js';
+import { getUserFromToken } from '../../_lib/auth';
+import { supabaseAdmin } from '../../_lib/supabase';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,7 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { data: adminProfile } = await supabaseAdmin.from('profiles').select('role').eq('id', adminUser.id).single();
     if (!adminProfile || adminProfile.role !== 'admin') {
-      return res.status(403).json({ detail: "Yetkisiz erişim" });
+      return res.status(403).json({ detail: "Unauthorized access" });
     }
 
     const targetUserId = Array.isArray(req.query.id) ? req.query.id[0] : (req.query.id as string);
@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (error) throw error;
     }
 
-    return res.json({ success: true, message: "Kullanıcı güncellendi" });
+    return res.json({ success: true, message: "User updated" });
   } catch (error: any) {
     console.error(error);
     return res.status(500).json({ error: error.message || 'Internal server error' });

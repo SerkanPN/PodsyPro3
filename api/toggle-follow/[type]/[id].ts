@@ -2,6 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getUserFromToken } from '../../_lib/auth.js';
 import { supabaseAdmin } from '../../_lib/supabase.js';
 import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../../_lib/etsy.js';
+import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,36 +28,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .select('*')
       .eq('user_id', user.id)
       .eq(id_col, target_id)
-      .single();
+      .maybeSingle();
 
     if (!row) {
       await supabaseAdmin.from(table).insert({ user_id: user.id, [id_col]: target_id });
       
-      // Auto-fetch and populate cache if it doesn't exist
       if (target_type === "shop") {
         const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
-        const resApi = await fetch(`${ETSY_BASE_URL}/shops/${target_id}`, { headers: { "x-api-key": authString } });
-        if (resApi.ok) {
-          const data = await resApi.json();
+        try {
+          const resApi = await axios.get(`${ETSY_BASE_URL}/shops/${target_id}`, { headers: { "x-api-key": authString } });
+          const data = resApi.data;
           await supabaseAdmin.from('shops').upsert({
             shop_id: target_id,
             shop_name: data.shop_name || "",
             icon_url: data.icon_url_fullxfull || ""
           }, { onConflict: 'shop_id' });
-        }
+        } catch {}
       } else if (target_type === "keyword") {
         await supabaseAdmin.from('keywords').upsert({ keyword: target_id }, { onConflict: 'keyword' });
       } else if (target_type === "listing") {
         const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
-        const resApi = await fetch(`${ETSY_BASE_URL}/listings/${target_id}?includes=Images`, { headers: { "x-api-key": authString } });
-        if (resApi.ok) {
-          const data = await resApi.json();
+        try {
+          const resApi = await axios.get(`${ETSY_BASE_URL}/listings/${target_id}?includes=Images`, { headers: { "x-api-key": authString } });
+          const data = resApi.data;
           const img = (data.images && data.images[0]) ? data.images[0].url_570xN : "";
           await supabaseAdmin.from('listings').upsert({
             listing_id: target_id,
             image_url: img
           }, { onConflict: 'listing_id' });
-        }
+        } catch {}
       }
       return res.json({ success: true, is_tracked: 1 });
     } else {

@@ -1,10 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabase.js';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy.js';
+import { supabaseAdmin } from './_lib/supabase.js';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from './_lib/etsy.js';
+import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Vercel Cron Security: Ensure request comes from Vercel cron
-  // Vercel automatically passes a Bearer token matching CRON_SECRET env variable
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -16,16 +15,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
-
-    // 1. Get all tracked shops
     const { data: shops } = await supabaseAdmin.from('shops').select('shop_id');
     
     if (shops && shops.length > 0) {
       for (const shop of shops) {
-        // Fetch latest shop data
-        const shopRes = await fetch(`${ETSY_BASE_URL}/shops/${shop.shop_id}`, { headers: { "x-api-key": authString } });
-        if (shopRes.ok) {
-          const shopCore = await shopRes.json();
+        try {
+          const shopRes = await axios.get(`${ETSY_BASE_URL}/shops/${shop.shop_id}`, {
+            headers: { "x-api-key": authString }
+          });
+          const shopCore = shopRes.data;
           const now = new Date().toISOString();
           
           await supabaseAdmin.from('shops').update({
@@ -40,18 +38,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             transaction_sold_count: shopCore.transaction_sold_count || 0,
             capture_time: now
           });
+        } catch (e: any) {
+          console.error(`Cron Shop Error (${shop.shop_id}):`, e.message);
         }
       }
     }
 
-    // 2. Get all tracked listings
     const { data: listings } = await supabaseAdmin.from('listings').select('listing_id, shop_id');
     
     if (listings && listings.length > 0) {
       for (const listing of listings) {
-        const coreRes = await fetch(`${ETSY_BASE_URL}/listings/${listing.listing_id}`, { headers: { "x-api-key": authString } });
-        if (coreRes.ok) {
-          const core = await coreRes.json();
+        try {
+          const coreRes = await axios.get(`${ETSY_BASE_URL}/listings/${listing.listing_id}`, {
+            headers: { "x-api-key": authString }
+          });
+          const core = coreRes.data;
           const p_data = core.price || {};
           const price_val = p_data ? (parseFloat(p_data.amount || 0) / parseFloat(p_data.divisor || 1)) : 0.0;
           const original_price_val = p_data.on_sale ? (parseFloat(p_data.original_amount || 0) / parseFloat(p_data.divisor || 1)) : null;
@@ -76,6 +77,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             original_price: original_price_val,
             capture_time: now
           });
+        } catch (e: any) {
+          console.error(`Cron Listing Error (${listing.listing_id}):`, e.message);
         }
       }
     }

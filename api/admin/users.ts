@@ -12,7 +12,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = await getUserFromToken(req);
     if (!user) return res.status(401).json({ detail: "Could not validate credentials" });
 
-    // Sadece admin görebilir
     const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
     if (!profile || profile.role !== 'admin') {
       return res.status(403).json({ detail: "Yetkisiz erişim" });
@@ -25,8 +24,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (error) throw error;
     
-    // Auth kullanıcıları e-postaları ile eşleştirmek için auth tablosundan mail alabiliriz 
-    // ama admin olarak listeleme yeterli olacaktır (email bilgisini auth.users listesi ile birleştirebiliriz)
     const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
     
     const enhancedUsers = users.map(u => {

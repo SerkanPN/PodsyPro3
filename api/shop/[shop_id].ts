@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
-import { supabaseAdmin } from '../_lib/supabase.js';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL, injectTrackingStatusToListings } from '../_lib/etsy.js';
+import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth';
+import { supabaseAdmin } from '../_lib/supabase';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL, injectTrackingStatusToListings } from '../_lib/etsy';
 import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -61,8 +61,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const shopRes = await axios.get(`${ETSY_BASE_URL}/shops/${shopId}`, { headers: { "x-api-key": authString } });
       shopCore = shopRes.data;
-    } catch (apiErr: any) {
-      return res.json({ ERROR: { http_error: apiErr.response?.status || 500, msg: apiErr.response?.data || apiErr.message } });
+    } catch (err: any) {
+      return res.json({ ERROR: { http_error: err.response?.status || 500, msg: err.response?.data || err.message } });
     }
 
     const iconUrl = shopCore.icon_url_fullxfull || "";

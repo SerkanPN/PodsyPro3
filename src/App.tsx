@@ -23,7 +23,8 @@ type ViewState =
   | { view: 'upload_product'; shop_id: string }
   | { view: 'fav_keywords' | 'fav_listings' | 'fav_shops' }
   | { view: 'history_listings' | 'history_shops' | 'history_keywords' }
-  | { view: 'admin' };
+  | { view: 'admin' }
+  | { view: 'login' };
 
 const App = () => {
   const { currentUser, logout, favData, historyData, fetchFavorites, fetchHistory, session, isAdmin } = useAppContext();
@@ -35,7 +36,6 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [errorData, setErrorData] = useState<string | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
 
   // Bu state'ler kendi sayfalarına taşınacak.
   // const [sortBy, setSortBy] = useState<string>('default');
@@ -166,31 +166,6 @@ const App = () => {
     }
   };
 
-  // Bu fonksiyonlar artık gereksiz, çünkü her sayfa kendi verisini çekecek.
-  /*
-  const executeListingScan = async (listingId: string, forceRefresh = false) => {
-    setLoading(true);
-    setErrorData(null);
-    // ...
-    setListingData(formattedData);
-    navigateTo({ view: 'listing', id: listingId });
-    // ...
-    setLoading(false);
-  };
-  const executeShopScan = async (shopId: string, forceRefresh = false) => {
-    setLoading(true);
-    setErrorData(null);
-    try {
-      const res = await fetch(`${API_BASE_URL}/shop/${shopId}?force_refresh=${forceRefresh}`);
-      const json = await res.json();
-      if(json.ERROR) throw new Error(typeof json.ERROR === 'string' ? json.ERROR : JSON.stringify(json.ERROR));
-      setShopData(json);
-      navigateTo({ view: 'shop', id: shopId });
-    } catch (e: any) { setErrorData(e.message); }
-    finally { setLoading(false); }
-  };
-  */
-
   const handleSyncAll = async () => {
     setSyncing(true);
     try {
@@ -295,10 +270,10 @@ const App = () => {
   }
 
   if (currentUser === null) {
-    if (showLogin) {
+    if (currentView.view === 'login') {
       return <LoginPage />;
     }
-    return <LandingPage onLoginClick={() => setShowLogin(true)} />;
+    return <LandingPage onLoginClick={() => navigateTo({ view: 'login' })} />;
   }
 
   return (

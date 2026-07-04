@@ -39,7 +39,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        checkAdminRole();
         setCurrentUser(session.user);
       } else {
         setCurrentUser(null);
@@ -49,7 +49,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        checkAdminRole();
         setCurrentUser(session.user);
       } else {
         setIsAdmin(false);
@@ -60,7 +60,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminRole = async (userId: string) => {
+  const checkAdminRole = async () => {
     setIsAdmin(true);
   };
 

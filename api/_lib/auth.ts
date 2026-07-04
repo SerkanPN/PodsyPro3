@@ -1,6 +1,7 @@
-import { supabaseAdmin } from './supabase';
+import { supabaseAdmin } from './supabase.js';
 
 export async function getUserFromToken(req: any) {
+  if (!supabaseAdmin) return null;
   const authHeader = req.headers['authorization'];
   if (!authHeader) return null;
   
@@ -17,6 +18,7 @@ export async function getUserFromToken(req: any) {
 }
 
 export async function checkAnalysisLimit(userId: string) {
+  if (!supabaseAdmin) return { allowed: false, error: "Database configuration missing" };
   let { data: profile, error } = await supabaseAdmin
     .from('profiles')
     .select('role, daily_limit, daily_usage, last_reset_date, subscription_end_date')

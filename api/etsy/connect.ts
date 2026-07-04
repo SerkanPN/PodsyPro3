@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
-import { supabaseAdmin } from '../_lib/supabase';
-import { ETSY_API_KEY } from '../_lib/etsy';
+import { supabaseAdmin } from '../_lib/supabase.js';
+import { ETSY_API_KEY } from '../_lib/etsy.js';
 
 const REDIRECT_URI = process.env.REDIRECT_URI || "https://podsy.pro/etsy/callback";
 

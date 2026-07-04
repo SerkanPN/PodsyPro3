@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
     
     const enhancedUsers = users.map(u => {
-      const authUser = authData.users.find(a => a.id === u.id);
+      const authUser = authData.users.find((a: any) => a.id === u.id);
       return {
         ...u,
         email: authUser ? authUser.email : null

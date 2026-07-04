@@ -37,11 +37,6 @@ const App = () => {
   const [syncing, setSyncing] = useState(false);
   const [errorData, setErrorData] = useState<string | null>(null);
 
-  // Bu state'ler kendi sayfalarına taşınacak.
-  // const [sortBy, setSortBy] = useState<string>('default');
-  // const [searchOffset, setSearchOffset] = useState(0);
-  // const [loadingMore, setLoadingMore] = useState(false);
-
   const navigateTo = useCallback((newViewState: ViewState) => {
     setCurrentView(newViewState);
     // URL'i de yeni state yapısına göre güncelleyelim.
@@ -108,15 +103,6 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (!document.getElementById('tailwind-cdn')) {
-      const script = document.createElement('script');
-      script.id = 'tailwind-cdn';
-      script.src = 'https://cdn.tailwindcss.com';
-      document.head.appendChild(script);
-    }
-  }, []);
-
-  useEffect(() => {
     if (currentView.view.startsWith('fav_')) {
       const type = currentView.view.split('_')[1];
       fetchFavorites(type);
@@ -127,8 +113,6 @@ const App = () => {
     }
   }, [currentView.view, fetchFavorites, fetchHistory]);
 
-  // handleSearch fonksiyonu büyük ölçüde basitleşecek veya tamamen kalkacak.
-  // Arama kutusuna yazılanı alıp sadece yönlendirme yapacak.
   const handleSearch = async (query: string) => {
     if (!query) return;
 
@@ -147,11 +131,7 @@ const App = () => {
         const match = cleanQuery.match(/shop\/([^\/\?]+)/);
         if (match) { navigateTo({ view: 'shop', id: match[1] }); return; }
       }
-      // Sadece sayısal ID ise, önce listing sonra shop olarak kontrol etmeye gerek yok.
-      // Kullanıcıyı direkt ID ile ilgili sayfaya yönlendirelim, o sayfa kendi kontrolünü yapsın.
       if (/^\d+$/.test(cleanQuery)) {
-        // Belirsiz ID'ler için yeni bir sayfa oluşturulabilir veya
-        // varsayılan olarak listing sayfasına yönlendirilebilir.
         navigateTo({ view: 'listing', id: cleanQuery });
         return;
       }
@@ -197,7 +177,6 @@ const App = () => {
     }
   }, []);
 
-  // Hangi sayfanın render edileceğini belirleyen fonksiyon
   const CurrentViewComponent = () => {
     switch (currentView.view) {
       case 'dashboard':

@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from './_lib/supabase.js';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from './_lib/etsy.js';
+import { supabaseAdmin } from './_lib/supabase';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from './_lib/etsy';
 import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -15,6 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
+
     const { data: shops } = await supabaseAdmin.from('shops').select('shop_id');
     
     if (shops && shops.length > 0) {
@@ -38,8 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             transaction_sold_count: shopCore.transaction_sold_count || 0,
             capture_time: now
           });
-        } catch (e: any) {
-          console.error(`Cron Shop Error (${shop.shop_id}):`, e.message);
+        } catch (err: any) {
+          console.error(`Cron Shop API Error: ${err.message}`);
         }
       }
     }
@@ -77,8 +78,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             original_price: original_price_val,
             capture_time: now
           });
-        } catch (e: any) {
-          console.error(`Cron Listing Error (${listing.listing_id}):`, e.message);
+        } catch (err: any) {
+          console.error(`Cron Listing API Error: ${err.message}`);
         }
       }
     }

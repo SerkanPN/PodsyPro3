@@ -2,18 +2,13 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
 import { supabaseAdmin } from '../_lib/supabase.js';
 import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL, injectTrackingStatusToListings } from '../_lib/etsy.js';
+import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({ detail: "Method not allowed" });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') return res.status(405).json({ detail: "Method not allowed" });
 
   try {
     const user = await getUserFromToken(req);
@@ -27,7 +22,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const forceRefresh = req.query.force_refresh === 'true';
     const cacheKey = `${keyword}_offset_${offset}`;
     
-    // Check Cache
     const { data: cached } = await supabaseAdmin
       .from('full_json_cache')
       .select('data')
@@ -56,16 +50,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     const authString = `${ETSY_API_KEY}:${ETSY_SHARED_SECRET}`;
+    let etsyData;
     
-    const etsyRes = await fetch(`${ETSY_BASE_URL}/listings/active?keywords=${encodeURIComponent(keyword)}&limit=100&offset=${offset}&includes=Images,Shop&sort_on=score&sort_order=desc`, {
-      headers: { "x-api-key": authString }
-    });
+    try {
+      const etsyRes = await axios.get(`${ETSY_BASE_URL}/listings/active?keywords=${encodeURIComponent(keyword)}&limit=100&offset=${offset}&includes=Images,Shop&sort_on=score&sort_order=desc`, {
+        headers: { "x-api-key": authString }
+      });
+      etsyData = etsyRes.data;
+    } catch (apiErr: any) {
+      return res.json({ http_error: apiErr.response?.status || 500, msg: apiErr.response?.data || apiErr.message });
+    }
     
-    if (!etsyRes.ok) return res.json({ http_error: etsyRes.status, msg: await etsyRes.text() });
-    
-    const data = await etsyRes.json();
-    const count = data.count || 0;
-    const results = data.results || [];
+    const count = etsyData.count || 0;
+    const results = etsyData.results || [];
     
     if (offset === 0) {
       await supabaseAdmin.from('keywords').upsert({ 
@@ -92,7 +89,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const p_data = item.price || {};
       const price_val = p_data ? (parseFloat(p_data.amount || 0) / parseFloat(p_data.divisor || 1)) : 0.0;
       
-      // Update Shop
       await supabaseAdmin.from('shops').upsert({
         shop_id: s_id,
         shop_name: shop_name,
@@ -100,7 +96,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         last_scan: now
       }, { onConflict: 'shop_id' });
       
-      // Update Listing
       await supabaseAdmin.from('listings').upsert({
         listing_id: l_id,
         shop_id: s_id,
@@ -117,7 +112,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         last_scan: now
       }, { onConflict: 'listing_id' });
       
-      // Create Snapshot
       await supabaseAdmin.from('snapshots').insert({
         target_id: l_id,
         target_type: 'listing',

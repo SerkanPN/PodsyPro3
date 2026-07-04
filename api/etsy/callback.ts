@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabase';
-import { ETSY_API_KEY, ETSY_BASE_URL } from '../_lib/etsy';
-import { getUserFromToken } from '../_lib/auth';
+import { supabaseAdmin } from '../_lib/supabase.js';
+import { ETSY_API_KEY, ETSY_BASE_URL } from '../_lib/etsy.js';
+import { getUserFromToken } from '../_lib/auth.js';
 
 const REDIRECT_URI = process.env.REDIRECT_URI || "https://podsy.pro/etsy/callback";
 

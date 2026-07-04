@@ -14,22 +14,31 @@ export async function getUserFromToken(req: any) {
 }
 
 export async function checkAnalysisLimit(userId: string) {
-  // Kullanıcının profilini al
-  const { data: profile, error } = await supabaseAdmin
+  let { data: profile, error } = await supabaseAdmin
     .from('profiles')
     .select('role, daily_limit, daily_usage, last_reset_date, subscription_end_date')
     .eq('id', userId)
     .single();
 
-  if (error || !profile) return { allowed: true }; // Profil yoksa bile teste izin ver
+  if (error || !profile) {
+    const { data: newProfile, error: insertError } = await supabaseAdmin
+      .from('profiles')
+      .insert([{ id: userId, role: 'user', daily_limit: 50, daily_usage: 0 }])
+      .select('role, daily_limit, daily_usage, last_reset_date, subscription_end_date')
+      .single();
+
+    if (insertError) {
+      return { allowed: false, error: "Could not create profile: " + insertError.message };
+    }
+    profile = newProfile;
+  }
 
   if (profile.role === 'admin') return { allowed: true };
 
-  // Abonelik süresi kontrolü
   if (profile.subscription_end_date) {
     const endDate = new Date(profile.subscription_end_date);
     if (new Date() > endDate) {
-      return { allowed: false, error: "Abonelik süreniz dolmuştur." };
+      return { allowed: false, error: "Subscription expired." };
     }
   }
 
@@ -37,7 +46,6 @@ export async function checkAnalysisLimit(userId: string) {
   let usage = profile.daily_usage || 0;
   const limit = profile.daily_limit || 50;
 
-  // Gün dönümü kontrolü
   if (profile.last_reset_date !== today) {
     usage = 0;
     await supabaseAdmin
@@ -47,14 +55,9 @@ export async function checkAnalysisLimit(userId: string) {
   }
 
   if (usage >= limit) {
-    return { allowed: false, error: "Günlük analiz limitinize ulaştınız." };
+    return { allowed: false, error: "Daily analysis limit reached." };
   }
 
-  // Kullanımı 1 artır
-  await supabaseAdmin
-    .rpc('increment_daily_usage', { user_id_param: userId }); // Supabase'de bir RPC fonksiyonu gerektirebilir veya doğrudan update yapabiliriz
-
-  // RPC yerine doğrudan update yapalım (Eşzamanlılık - concurrency - sorunu çok mühim değilse)
   await supabaseAdmin
     .from('profiles')
     .update({ daily_usage: usage + 1 })

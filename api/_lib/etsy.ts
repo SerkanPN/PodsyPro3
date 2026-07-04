@@ -15,7 +15,6 @@ export async function injectTrackingStatusToListings(listings: any[], userId: st
   const listingIds = listings.map(l => String(l.listing_id)).filter(id => id);
   if (listingIds.length === 0) return listings;
   
-  // Get tracked listings for this user
   const { data } = await supabaseAdmin
     .from('user_tracked_listings')
     .select('listing_id')

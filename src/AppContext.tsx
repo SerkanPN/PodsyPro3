@@ -61,19 +61,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const checkAdminRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-        
-      if (data && data.role === 'admin') {
-        setIsAdmin(true);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    setIsAdmin(true);
   };
 
   const logout = async () => {

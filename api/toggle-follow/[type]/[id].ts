@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUserFromToken } from '../../_lib/auth.js';
-import { supabaseAdmin } from '../../_lib/supabase.js';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../../_lib/etsy.js';
+import { getUserFromToken } from '../../_lib/auth';
+import { supabaseAdmin } from '../../_lib/supabase';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../../_lib/etsy';
 import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (target_type === "listing") { table = "user_tracked_listings"; id_col = "listing_id"; }
     else if (target_type === "shop") { table = "user_tracked_shops"; id_col = "shop_id"; }
     else if (target_type === "keyword") { table = "user_tracked_keywords"; id_col = "keyword"; }
-    else return res.json({ status: "error", message: "Geçersiz target türü" });
+    else return res.json({ status: "error", message: "Invalid target type" });
 
     const { data: row } = await supabaseAdmin
       .from(table)

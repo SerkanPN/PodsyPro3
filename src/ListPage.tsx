@@ -9,7 +9,6 @@ interface ListPageProps {
 }
 
 const ListPage: React.FC<ListPageProps> = ({ title, items, itemType, onItemClick }) => {
-
   const { toggleFollow, HeartIcon, resolvePrice } = useAppContext();
 
   const renderItem = (item: any, index: number) => {
@@ -48,7 +47,7 @@ const ListPage: React.FC<ListPageProps> = ({ title, items, itemType, onItemClick
           <div key={index} className="bg-[#111] p-6 rounded-2xl border border-[#333] hover:border-sky-500 transition cursor-pointer flex justify-between items-center shadow-lg group" onClick={() => onItemClick('search', item.keyword)}>
             <div>
               <h3 className="text-xl font-black text-white group-hover:text-sky-400 transition">"{item.keyword}"</h3>
-              <p className="text-xs text-zinc-500 font-mono mt-1">Sonuç: {item.total_results?.toLocaleString()}</p>
+              <p className="text-xs text-zinc-500 font-mono mt-1">Results: {item.total_results?.toLocaleString()}</p>
             </div>
             <div onClick={(e) => toggleFollow('keyword', item.keyword, e)}><HeartIcon isTracked={item.is_tracked} /></div>
           </div>
@@ -68,7 +67,7 @@ const ListPage: React.FC<ListPageProps> = ({ title, items, itemType, onItemClick
       <div className={`grid ${gridClass} gap-4`}>
         {items.length > 0 
           ? items.map(renderItem) 
-          : <p className="text-zinc-600 col-span-full text-center mt-10 font-bold">Burada gösterilecek bir şey yok.</p>
+          : <p className="text-zinc-600 col-span-full text-center mt-10 font-bold">Nothing to display here.</p>
         }
       </div>
     </div>

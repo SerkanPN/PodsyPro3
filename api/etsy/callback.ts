@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabase.js';
-import { ETSY_API_KEY, ETSY_BASE_URL } from '../_lib/etsy.js';
-import { getUserFromToken } from '../_lib/auth.js';
+import { supabaseAdmin } from '../_lib/supabase';
+import { ETSY_API_KEY, ETSY_BASE_URL } from '../_lib/etsy';
+import { getUserFromToken } from '../_lib/auth';
 import axios from 'axios';
 
 const REDIRECT_URI = process.env.REDIRECT_URI || "https://podsy.pro/etsy/callback";
@@ -77,6 +77,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ detail: "Failed to fetch Etsy user profile" });
   } catch (error: any) {
     console.error(error);
-    return res.status(500).json({ error: error.response?.data || error.message || 'Internal server error' });
+    return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 }

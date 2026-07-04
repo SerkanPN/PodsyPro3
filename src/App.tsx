@@ -182,29 +182,47 @@ const App = () => {
       case 'dashboard':
         return (
           <div className="max-w-4xl mx-auto mt-20 p-10 border-2 border-dashed border-zinc-800 rounded-3xl text-center">
-            <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter">API TEST EKRANI</h2>
+            <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter">GERÇEK ETSY API TESTİ</h2>
             
             <button 
               onClick={async () => {
                 try {
-                  alert("1. ADIM: /api/test adresine istek atılıyor...");
+                  // Örnek bir Etsy Listing ID (Bunu değiştirebilirsiniz)
+                  const testListingId = "1438914614"; 
                   
-                  const res = await fetch('/api/test');
+                  alert(`1. ADIM: /api/listing/${testListingId} adresine istek atılıyor...`);
+                  
+                  const res = await fetch(`/api/listing/${testListingId}?force_refresh=true`, {
+                    headers: {
+                      // Eğer token hatası verirse diye boş bir yetki başlığı ekliyoruz
+                      'Authorization': `Bearer TEST_TOKEN` 
+                    }
+                  });
+                  
                   alert(`2. ADIM: Sunucu Cevap Kodu: ${res.status}`);
                   
                   const text = await res.text(); 
-                  alert(`3. ADIM: Sunucudan Gelen Ham Veri:\n\n${text.substring(0, 150)}`);
                   
-                  const json = JSON.parse(text);
-                  alert(`4. ADIM: JSON BAŞARILI!\nMesaj: ${json.message}`);
+                  try {
+                    const json = JSON.parse(text);
+                    if (json.ERROR) {
+                      alert(`3. ADIM: ETSY API HATASI!\n\n${JSON.stringify(json.ERROR, null, 2)}`);
+                    } else if (json.listing) {
+                      alert(`3. ADIM: BAŞARILI! Ürün Bulundu:\n\nBaşlık: ${json.listing.title}\nFiyat: ${json.price}\nGörüntülenme: ${json.listing.views}`);
+                    } else {
+                      alert(`3. ADIM: BEKLENMEYEN JSON CEVABI:\n\n${text.substring(0, 300)}`);
+                    }
+                  } catch (parseErr) {
+                    alert(`3. ADIM: JSON PARSE HATASI (Sunucu HTML veya hata döndürdü):\n\n${text.substring(0, 300)}`);
+                  }
                   
                 } catch (err: any) {
                   alert(`HATA PATLADI:\n${err.message}`);
                 }
               }}
-              className="bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-2xl font-black uppercase transition-all"
+              className="bg-emerald-500 hover:bg-emerald-400 text-white px-8 py-4 rounded-2xl font-black uppercase transition-all"
             >
-              API'YI TEST ET
+              GERÇEK LİSTİNG TESTİ YAP
             </button>
           </div>
         );

@@ -15,7 +15,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const adminUser = await getUserFromToken(req);
     if (!adminUser) return res.status(401).json({ detail: "Could not validate credentials" });
 
-    // Sadece admin
     const { data: adminProfile } = await supabaseAdmin.from('profiles').select('role').eq('id', adminUser.id).single();
     if (!adminProfile || adminProfile.role !== 'admin') {
       return res.status(403).json({ detail: "Yetkisiz erişim" });

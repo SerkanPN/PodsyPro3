@@ -61,7 +61,7 @@ const SearchPage = ({ keyword, onListingClick, onShopClick }: SearchPageProps) =
     if (keyword) {
       fetchData(keyword, false, false);
     }
-  }, [keyword, fetchData]); // fetchData artık stabil olduğu için eklenebilir.
+  }, [keyword, fetchData]);
 
   const sortedListings = useMemo(() => {
     if (!searchData?.listings) return [];
@@ -85,8 +85,8 @@ const SearchPage = ({ keyword, onListingClick, onShopClick }: SearchPageProps) =
   };
 
   if (loading) return <div className="flex flex-col items-center justify-center h-[50vh] space-y-4 animate-pulse"><div className="w-16 h-16 border-4 border-sky-500/30 border-t-sky-500 rounded-full animate-spin"></div><p className="text-sky-500 font-mono text-xs uppercase tracking-[0.3em]">Searching...</p></div>;
-  if (error) return <div className="text-red-500 text-center mt-20">Hata: {error}</div>;
-  if (!searchData) return <div className="text-zinc-500 text-center mt-20">Arama sonucu bulunamadı.</div>;
+  if (error) return <div className="text-red-500 text-center mt-20">Error: {error}</div>;
+  if (!searchData) return <div className="text-zinc-500 text-center mt-20">No search results found.</div>;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-[fadeIn_0.3s] pb-20">
@@ -94,8 +94,8 @@ const SearchPage = ({ keyword, onListingClick, onShopClick }: SearchPageProps) =
         <div>
           <div className="flex items-center gap-3 mb-1">
             <p className="text-sky-500 font-black text-[10px] uppercase tracking-widest">Target Keyword</p>
-            <div className="cursor-pointer" onClick={handleKeywordFollow} title="Aramayı Kaydet"><HeartIcon isTracked={searchData.is_tracked} /></div>
-            <button onClick={() => fetchData(keyword, false, true)} className="text-zinc-500 hover:text-sky-400 transition cursor-pointer ml-2" title="Veriyi Yeniden Çek">
+            <div className="cursor-pointer" onClick={handleKeywordFollow} title="Save Search"><HeartIcon isTracked={searchData.is_tracked} /></div>
+            <button onClick={() => fetchData(keyword, false, true)} className="text-zinc-500 hover:text-sky-400 transition cursor-pointer ml-2" title="Refresh Data">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </button>
           </div>
@@ -107,11 +107,11 @@ const SearchPage = ({ keyword, onListingClick, onShopClick }: SearchPageProps) =
             <p className="text-2xl font-mono font-black text-emerald-400">{searchData.total_count?.toLocaleString()}</p>
           </div>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-[#1a1a1a] border border-[#333] text-zinc-300 text-[11px] font-bold rounded-lg px-3 py-2 outline-none focus:border-sky-500 cursor-pointer uppercase tracking-wider">
-            <option value="default">SIRALAMA: Alaka Düzeyi</option>
-            <option value="favorites">SIRALAMA: En Çok Favori</option>
-            <option value="views">SIRALAMA: En Çok İzlenen</option>
-            <option value="price_asc">SIRALAMA: En Düşük Fiyat</option>
-            <option value="price_desc">SIRALAMA: En Yüksek Fiyat</option>
+            <option value="default">SORT: Relevance</option>
+            <option value="favorites">SORT: Most Favorited</option>
+            <option value="views">SORT: Most Viewed</option>
+            <option value="price_asc">SORT: Lowest Price</option>
+            <option value="price_desc">SORT: Highest Price</option>
           </select>
         </div>
       </div>
@@ -119,7 +119,7 @@ const SearchPage = ({ keyword, onListingClick, onShopClick }: SearchPageProps) =
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {sortedListings.map((item: any, i: number) => (
           <div key={i} className="bg-[#111] rounded-2xl border border-[#333] overflow-hidden hover:border-sky-500 transition group flex flex-col shadow-lg cursor-pointer relative" onClick={() => onListingClick(item.listing_id)}>
-            <div className="absolute top-2 left-2 z-10" title="Takibe Al" onClick={(e) => toggleFollow('listing', item.listing_id, e)}>
+            <div className="absolute top-2 left-2 z-10" title="Track" onClick={(e) => toggleFollow('listing', item.listing_id, e)}>
               <HeartIcon isTracked={item.is_tracked} />
             </div>
             <div className="relative aspect-square overflow-hidden bg-[#000]">
@@ -144,7 +144,7 @@ const SearchPage = ({ keyword, onListingClick, onShopClick }: SearchPageProps) =
       {searchData.listings && searchData.listings.length < searchData.total_count && (
         <div className="flex justify-center mt-12 mb-8">
           <button onClick={() => fetchData(keyword, true, false, (searchData?.offset || 0) + 100)} disabled={loadingMore} className={`bg-[#111] border border-[#333] text-sky-500 font-black px-12 py-4 rounded-xl hover:bg-sky-900/20 hover:border-sky-500 transition shadow-lg shadow-sky-900/10 tracking-[0.2em] text-xs uppercase flex items-center gap-3 ${loadingMore ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}>
-            {loadingMore ? 'YÜKLENİYOR...' : 'DAHA FAZLA YÜKLE'}
+            {loadingMore ? 'LOADING...' : 'LOAD MORE'}
           </button>
         </div>
       )}

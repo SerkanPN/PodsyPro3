@@ -7,10 +7,13 @@ export async function getUserFromToken(req: any) {
   const token = authHeader.split(' ')[1];
   if (!token) return null;
 
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !user) return null;
-
-  return user;
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) return null;
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 export async function checkAnalysisLimit(userId: string) {

@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
-import { supabaseAdmin } from '../_lib/supabase.js';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy.js';
+import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth';
+import { supabaseAdmin } from '../_lib/supabase';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy';
 import axios from 'axios';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -58,8 +58,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headers: { "x-api-key": authString }
       });
       core = coreRes.data;
-    } catch (apiErr: any) {
-      return res.json({ ERROR: { http_error: apiErr.response?.status || 500, msg: apiErr.response?.data || apiErr.message } });
+    } catch (err: any) {
+      return res.json({ ERROR: { http_error: err.response?.status || 500, msg: err.response?.data || err.message } });
     }
 
     let reviews = {};

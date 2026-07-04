@@ -25,27 +25,27 @@ type ViewState =
   | { view: 'admin' }
   | { view: 'login' };
 
-const CleanDashboard = () => {
+const MainDashboard = () => {
   return (
     <div className="max-w-4xl mx-auto mt-10 p-10 border border-zinc-800 bg-[#111] rounded-3xl text-left shadow-2xl animate-[fadeIn_0.3s]">
       <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4 italic">
         PODSY<span className="text-sky-500">PRO</span> CONTROL CENTER
       </h2>
       <p className="text-sm text-zinc-400 mb-8 leading-relaxed">
-        PodsyPro Intelligence Engine'e hoş geldiniz. Sol menüyü kullanarak mağazalarınızı yönetebilir, Etsy aramaları yapabilir veya rakip ürün/mağaza ID'lerini girerek derin analizler gerçekleştirebilirsiniz.
+        Welcome to PodsyPro Intelligence Engine. You can manage your shops, execute Etsy searches, or run deep analyzers by entering listings or shop IDs in the top bar.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-black/40 p-6 rounded-2xl border border-zinc-800 hover:border-sky-500/50 transition">
-          <h3 className="font-bold text-white mb-2 text-sm uppercase">1. MAĞAZANI BAĞLA</h3>
-          <p className="text-xs text-zinc-500">Profil & Mağazalar sekmesinden ilk Etsy mağazanı saniyeler içinde yetkilendir.</p>
+          <h3 className="font-bold text-white mb-2 text-sm uppercase">1. CONNECT SHOP</h3>
+          <p className="text-xs text-zinc-500">Connect and authorize your Etsy shops in the Profile & Shops section.</p>
         </div>
         <div className="bg-black/40 p-6 rounded-2xl border border-zinc-800 hover:border-sky-500/50 transition">
-          <h3 className="font-bold text-white mb-2 text-sm uppercase">2. DERİN ARAT</h3>
-          <p className="text-xs text-zinc-500">Üstteki arama çubuğuna kelime, ürün linki veya mağaza adresi girip tarat.</p>
+          <h3 className="font-bold text-white mb-2 text-sm uppercase">2. SEARCH TARGETS</h3>
+          <p className="text-xs text-zinc-500">Use the top bar with keywords, direct listing links, or shop names to scan.</p>
         </div>
         <div className="bg-black/40 p-6 rounded-2xl border border-zinc-800 hover:border-sky-500/50 transition">
-          <h3 className="font-bold text-white mb-2 text-sm uppercase">3. TAKİP ET</h3>
-          <p className="text-xs text-zinc-500">Sevdiğin ürünleri veya kelimeleri kalbe basarak listene ekle, ivmesini izle.</p>
+          <h3 className="font-bold text-white mb-2 text-sm uppercase">3. MONITOR DATA</h3>
+          <p className="text-xs text-zinc-500">Click hearts to add listings, keywords, or shops to your tracked inventory.</p>
         </div>
       </div>
     </div>
@@ -90,15 +90,15 @@ const App = () => {
       .then(data => {
         if (data.access_token) {
           localStorage.setItem('podsy_token', data.access_token);
-          alert("Etsy bağlandı!");
+          alert("Etsy connected");
           window.location.href = "/?view=profile";
         } else {
-          alert(data.detail || "Bağlantı başarısız.");
+          alert(data.detail || "Connection failed");
           window.location.href = "/";
         }
       })
       .catch(() => {
-        alert("Etsy bağlantı hatası.");
+        alert("Etsy connection error");
         window.location.href = "/";
       });
       return;
@@ -158,7 +158,7 @@ const App = () => {
       }
       navigateTo({ view: 'search', keyword: cleanQuery });
     } catch (e: any) {
-      setErrorData("Hata: " + e.message);
+      setErrorData("Error: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -168,9 +168,9 @@ const App = () => {
     setSyncing(true);
     try {
       await fetch(`${API_BASE_URL}/sync-all`, { method: 'POST' });
-      alert("Eşitleme başlatıldı.");
+      alert("Synchronization started");
     } catch {
-      alert("Eşitleme başarısız.");
+      alert("Synchronization failed");
     }
     setTimeout(() => setSyncing(false), 2000);
   };
@@ -178,7 +178,7 @@ const App = () => {
   const CurrentViewComponent = () => {
     switch (currentView.view) {
       case 'dashboard':
-        return <CleanDashboard />;
+        return <MainDashboard />;
       case 'search':
         return <SearchPage
           keyword={currentView.keyword}
@@ -234,7 +234,7 @@ const App = () => {
   };
 
   if (currentUser === undefined) {
-    return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-white font-mono">Yükleniyor...</div>;
+    return <div className="min-h-screen bg-[#050505] flex items-center justify-center text-white font-mono">Loading...</div>;
   }
 
   if (currentUser === null) {
@@ -258,22 +258,22 @@ const App = () => {
           </div>
 
           <div onClick={() => navigateTo({ view: 'profile' })} className={`px-4 py-3 rounded-lg font-bold text-xs cursor-pointer transition-all ${currentView.view === 'profile' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-lg shadow-emerald-900/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
-            PROFIL & MAĞAZALAR
+            PROFILE & SHOPS
           </div>
 
           {isAdmin && (
             <div onClick={() => navigateTo({ view: 'admin' })} className={`px-4 py-3 rounded-lg font-bold text-xs cursor-pointer transition-all ${currentView.view === 'admin' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20 shadow-lg shadow-rose-900/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
-              ADMIN PANELI
+              ADMIN DASHBOARD
             </div>
           )}
 
           <div className="space-y-2">
             <h3 className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Keyword</h3>
-            <div onClick={() => currentView.view === 'search' ? navigateTo(currentView) : null} className={`px-4 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center gap-2 ${currentView.view === 'search' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a] cursor-pointer'}`}>
+            <div onClick={() => currentView.view === 'search' ? navigateTo(currentView) : null} className={`px-4 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center gap-2 ${currentView.view === 'search' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
               <span className="text-zinc-700">↳</span> Keyword Search
             </div>
             <div onClick={() => navigateTo({ view: 'fav_keywords' })} className={`px-4 py-2.5 rounded-lg font-bold text-xs cursor-pointer transition-all flex items-center gap-2 ${currentView.view === 'fav_keywords' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
-              <span className="text-zinc-700">↳</span> Favorited Keywords
+              <span className="text-zinc-700">↳</span> Tracked Keywords
             </div>
             <div onClick={() => navigateTo({ view: 'history_keywords' })} className={`px-4 py-2.5 rounded-lg font-bold text-xs cursor-pointer transition-all flex items-center gap-2 ${currentView.view === 'history_keywords' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
               <span className="text-zinc-700">↳</span> Keyword History
@@ -282,11 +282,11 @@ const App = () => {
 
           <div className="space-y-2">
             <h3 className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Listing</h3>
-            <div onClick={() => currentView.view === 'listing' ? navigateTo(currentView) : null} className={`px-4 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center gap-2 ${currentView.view === 'listing' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a] cursor-pointer'}`}>
+            <div onClick={() => currentView.view === 'listing' ? navigateTo(currentView) : null} className={`px-4 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center gap-2 ${currentView.view === 'listing' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
               <span className="text-zinc-700">↳</span> Listing Analyzer
             </div>
             <div onClick={() => navigateTo({ view: 'fav_listings' })} className={`px-4 py-2.5 rounded-lg font-bold text-xs cursor-pointer transition-all flex items-center gap-2 ${currentView.view === 'fav_listings' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
-              <span className="text-zinc-700">↳</span> Favorited Listings
+              <span className="text-zinc-700">↳</span> Tracked Listings
             </div>
             <div onClick={() => navigateTo({ view: 'history_listings' })} className={`px-4 py-2.5 rounded-lg font-bold text-xs cursor-pointer transition-all flex items-center gap-2 ${currentView.view === 'history_listings' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
               <span className="text-zinc-700">↳</span> Listing History
@@ -295,11 +295,11 @@ const App = () => {
 
           <div className="space-y-2">
             <h3 className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Shop</h3>
-            <div onClick={() => currentView.view === 'shop' ? navigateTo(currentView) : null} className={`px-4 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center gap-2 ${currentView.view === 'shop' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a] cursor-pointer'}`}>
+            <div onClick={() => currentView.view === 'shop' ? navigateTo(currentView) : null} className={`px-4 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center gap-2 ${currentView.view === 'shop' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
               <span className="text-zinc-700">↳</span> Shop Analyzer
             </div>
             <div onClick={() => navigateTo({ view: 'fav_shops' })} className={`px-4 py-2.5 rounded-lg font-bold text-xs cursor-pointer transition-all flex items-center gap-2 ${currentView.view === 'fav_shops' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
-              <span className="text-zinc-700">↳</span> Favorited Shops
+              <span className="text-zinc-700">↳</span> Tracked Shops
             </div>
             <div onClick={() => navigateTo({ view: 'history_shops' })} className={`px-4 py-2.5 rounded-lg font-bold text-xs cursor-pointer transition-all flex items-center gap-2 ${currentView.view === 'history_shops' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#1a1a1a]'}`}>
               <span className="text-zinc-700">↳</span> Shop History
@@ -315,7 +315,7 @@ const App = () => {
         </nav>
 
         <div className="p-4 border-t border-[#222]">
-          <button onClick={handleSyncAll} disabled={syncing} className={`w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${syncing ? 'bg-emerald-900/50 text-emerald-500 border border-emerald-900 cursor-wait' : 'bg-[#1a1a1a] text-zinc-400 hover:bg-emerald-600 hover:text-white border border-[#333] hover:border-emerald-500 shadow-lg shadow-black'}`}>
+          <button onClick={handleSyncAll} disabled={syncing} className={`w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${syncing ? 'bg-emerald-900/50 text-emerald-500 border border-emerald-900' : 'bg-[#1a1a1a] text-zinc-400 hover:bg-emerald-600 hover:text-white border border-[#333] hover:border-emerald-500 shadow-lg shadow-black'}`}>
             <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             {syncing ? 'SYNCING...' : 'SYNC ALL DATA'}
           </button>
@@ -327,7 +327,7 @@ const App = () => {
           <div className="pl-4 text-zinc-500"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
           <input
             className="flex-1 bg-transparent border-none outline-none text-zinc-100 px-2 py-3 text-sm placeholder-zinc-600 font-medium"
-            placeholder="Derin analiz için Keyword, Link, Listing ID veya Shop ID girin..."
+            placeholder="Enter keyword, link, listing ID or shop ID..."
             value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
           />
           <button onClick={() => handleSearch(searchQuery)} className="bg-zinc-100 text-zinc-900 border-none px-8 py-3 rounded-xl font-black text-xs cursor-pointer hover:bg-sky-500 hover:text-white hover:scale-105 active:scale-95 transition-all shadow-lg">{loading ? "SCANNING..." : "HACK"}</button>
@@ -337,7 +337,7 @@ const App = () => {
           <div className="max-w-4xl mx-auto mb-8 bg-rose-950/30 border border-rose-900/50 rounded-2xl p-6 shadow-2xl animate-[fadeIn_0.3s]">
             <div className="flex items-center gap-3 mb-4 border-b border-rose-900/50 pb-4">
               <div className="p-2 bg-rose-900/50 rounded-lg text-rose-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
-              <div><h3 className="font-black text-rose-500 tracking-tighter text-xl uppercase">Target Hack Failed</h3><p className="text-xs text-rose-400/70 font-mono">Etsy API isteği reddetti veya veri bulunamadı.</p></div>
+              <div><h3 className="font-black text-rose-500 tracking-tighter text-xl uppercase">Target Hack Failed</h3><p className="text-xs text-rose-400/70 font-mono">Etsy API denied request or no data found.</p></div>
             </div>
             <pre className="text-xs text-rose-300 font-mono whitespace-pre-wrap overflow-auto max-h-[300px] custom-scrollbar bg-black/50 p-4 rounded-xl border border-rose-900/30">{errorData}</pre>
           </div>

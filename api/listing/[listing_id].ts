@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth';
-import { supabaseAdmin } from '../_lib/supabase';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy';
+import { getUserFromToken, checkAnalysisLimit } from '../_lib/auth.js';
+import { supabaseAdmin } from '../_lib/supabase.js';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../_lib/etsy.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');

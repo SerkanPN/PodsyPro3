@@ -2,7 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const key = process.env.ETSY_API_KEY || "34axrr0o1tzjvfcdn2mexpp4";
-  const secret = process.env.ETSY_SHARED_SECRET || "f5njckm23y";
+  const secret = process.env.ETSY_SHARED_SECRET || "f5njekm23y";
   const authString = `${key}:${secret}`;
 
   const maskedKey = key.substring(0, 4) + "..." + key.substring(key.length - 4);

@@ -182,12 +182,30 @@ const App = () => {
       case 'dashboard':
         return (
           <div className="max-w-4xl mx-auto mt-20 p-10 border-2 border-dashed border-zinc-800 rounded-3xl text-center">
-            <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter">Etsy Keyword Import</h2>
-            <p className="text-zinc-500 mb-8 text-sm">Etsy Search Analytics üzerinden indirdiğin Excel dosyasını buraya yükle.<br/>Tüm kelimeler otomatik olarak taranacak ve veritabanına eklenecektir.</p>
-            <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="hidden" id="excel-upload" />
-            <label htmlFor="excel-upload" className="cursor-pointer bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-2xl font-black uppercase transition-all inline-block">
-              {syncing ? 'İŞLENİYOR...' : 'EXCEL DOSYASI SEÇ'}
-            </label>
+            <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tighter">API TEST EKRANI</h2>
+            
+            <button 
+              onClick={async () => {
+                try {
+                  alert("1. ADIM: /api/test adresine istek atılıyor...");
+                  
+                  const res = await fetch('/api/test');
+                  alert(`2. ADIM: Sunucu Cevap Kodu: ${res.status}`);
+                  
+                  const text = await res.text(); 
+                  alert(`3. ADIM: Sunucudan Gelen Ham Veri:\n\n${text.substring(0, 150)}`);
+                  
+                  const json = JSON.parse(text);
+                  alert(`4. ADIM: JSON BAŞARILI!\nMesaj: ${json.message}`);
+                  
+                } catch (err: any) {
+                  alert(`HATA PATLADI:\n${err.message}`);
+                }
+              }}
+              className="bg-sky-500 hover:bg-sky-400 text-white px-8 py-4 rounded-2xl font-black uppercase transition-all"
+            >
+              API'YI TEST ET
+            </button>
           </div>
         );
       case 'search':

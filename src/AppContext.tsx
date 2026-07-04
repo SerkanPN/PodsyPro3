@@ -70,7 +70,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const fetchFavorites = useCallback(async (type: string) => {
     if (!currentUser) return;
-    const table = `user_tracked_${type}s`; 
+    const table = `user_tracked_${type}`; 
     const { data, error } = await supabase.from(table).select('*');
     if (!error && data) {
       setFavData(data);
@@ -79,7 +79,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const fetchHistory = useCallback(async (type: string) => {
     if (!currentUser) return;
-    const table = `user_history_${type}s`;
+    const table = `user_history_${type}`;
     const { data, error } = await supabase.from(table).select('*').order('last_viewed', { ascending: false });
     if (!error && data) {
       setHistoryData(data);
@@ -115,7 +115,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return data.is_tracked;
     } catch (err) { 
       console.error(err);
-      alert("Takip işlemi başarısız.");
+      alert("Follow action failed.");
       return undefined;
     }
   }, [currentUser]);

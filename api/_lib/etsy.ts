@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase';
+import { supabaseAdmin } from './supabase.js';
 
 export const ETSY_API_KEY = process.env.ETSY_API_KEY || "34axrr0o1tzjvfcdn2mexpp4";
 export const ETSY_SHARED_SECRET = process.env.ETSY_SHARED_SECRET || "f5njekm23y";
@@ -6,8 +6,7 @@ export const ETSY_BASE_URL = "https://openapi.etsy.com/v3/application";
 
 export async function injectTrackingStatusToListings(listings: any[], userId: string | null) {
   if (!listings || listings.length === 0) return listings;
-  
-  if (!userId) {
+  if (!userId || !supabaseAdmin) {
     listings.forEach(l => l.is_tracked = 0);
     return listings;
   }

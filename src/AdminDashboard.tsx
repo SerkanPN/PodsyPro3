@@ -15,7 +15,7 @@ const AdminDashboard: React.FC = () => {
       const res = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error("Kullanıcılar alınamadı");
+      if (!res.ok) throw new Error("Users could not be fetched");
       const data = await res.json();
       setUsers(data);
     } catch (err: any) {
@@ -42,19 +42,19 @@ const AdminDashboard: React.FC = () => {
         body: JSON.stringify({ daily_limit: newLimit })
       });
       if (res.ok) {
-        alert("Limit güncellendi!");
+        alert("Limit updated!");
         fetchUsers();
       } else {
-        alert("Güncelleme başarısız.");
+        alert("Update failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Hata oluştu.");
+      alert("Error occurred");
     }
   };
 
   if (!isAdmin) {
-    return <div className="p-8 text-center text-rose-500 font-bold">Bu sayfaya erişim yetkiniz yok.</div>;
+    return <div className="p-8 text-center text-rose-500 font-bold">Unauthorized</div>;
   }
 
   return (
@@ -64,9 +64,9 @@ const AdminDashboard: React.FC = () => {
       </h2>
 
       {loading ? (
-        <div className="text-zinc-500 font-mono">Kullanıcılar yükleniyor...</div>
+        <div className="text-zinc-500 font-mono">Loading users...</div>
       ) : error ? (
-        <div className="text-rose-500 font-bold">Hata: {error}</div>
+        <div className="text-rose-500 font-bold">Error: {error}</div>
       ) : (
         <div className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
@@ -74,19 +74,19 @@ const AdminDashboard: React.FC = () => {
               <thead className="bg-zinc-950 text-zinc-500 font-mono text-[10px] uppercase">
                 <tr>
                   <th className="p-4 font-bold">ID</th>
-                  <th className="p-4 font-bold">Kullanıcı Adı</th>
+                  <th className="p-4 font-bold">Username</th>
                   <th className="p-4 font-bold">Email</th>
-                  <th className="p-4 font-bold">Rol</th>
-                  <th className="p-4 font-bold">Günlük Limit</th>
-                  <th className="p-4 font-bold">İşlem</th>
+                  <th className="p-4 font-bold">Role</th>
+                  <th className="p-4 font-bold">Daily Limit</th>
+                  <th className="p-4 font-bold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
                 {users.map((u: any) => (
                   <tr key={u.id} className="hover:bg-zinc-800/50 transition">
                     <td className="p-4 text-zinc-500 font-mono text-xs">{u.id}</td>
-                    <td className="p-4 text-zinc-100 font-bold">{u.username || 'Bilinmiyor'}</td>
-                    <td className="p-4 text-zinc-400">{u.email || 'Bilinmiyor'}</td>
+                    <td className="p-4 text-zinc-100 font-bold">{u.username || 'Unknown'}</td>
+                    <td className="p-4 text-zinc-400">{u.email || 'Unknown'}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${u.role === 'admin' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
                         {u.role || 'user'}
@@ -96,14 +96,14 @@ const AdminDashboard: React.FC = () => {
                     <td className="p-4">
                       <button 
                         onClick={() => {
-                          const limit = prompt("Yeni limit değerini girin:", u.daily_limit);
+                          const limit = prompt("Enter new limit:", u.daily_limit);
                           if (limit && !isNaN(parseInt(limit))) {
                             handleUpdateLimit(u.id, parseInt(limit));
                           }
                         }}
-                        className="bg-sky-500/10 text-sky-500 border border-sky-500/20 hover:bg-sky-500 hover:text-white px-3 py-1 rounded text-xs font-bold transition"
+                        className="bg-sky-500/10 text-sky-500 border border-sky-500/20 text-xs font-bold py-2 rounded-lg hover:bg-sky-500 hover:text-white transition"
                       >
-                        Limiti Değiştir
+                        Change Limit
                       </button>
                     </td>
                   </tr>

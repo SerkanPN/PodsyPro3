@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../../_lib/supabase';
-import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../../_lib/etsy';
+import { supabaseAdmin } from '../../_lib/supabase.js';
+import { ETSY_API_KEY, ETSY_SHARED_SECRET, ETSY_BASE_URL } from '../../_lib/etsy.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Vercel Cron Security: Ensure request comes from Vercel cron

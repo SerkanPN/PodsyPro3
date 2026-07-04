@@ -26,8 +26,6 @@ type ViewState =
   | { view: 'admin' }
   | { view: 'login' };
 const DashboardTest = () => {
-  const { session } = useAppContext();
-  const [testId, setTestId] = useState("1250961052");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,22 +33,32 @@ const DashboardTest = () => {
     setLoading(true);
     setResult(null);
     try {
-      const token = session?.access_token || '';
-      const res = await fetch(`/api/listing/${testId}?force_refresh=true`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const text = await res.text();
-      try {
-        setResult(JSON.parse(text));
-      } catch(e) {
-        setResult({ error: "Sunucu JSON döndürmedi. Ham cevap:", raw: text });
-      }
+      const res = await fetch('/api/test-etsy');
+      const data = await res.json();
+      setResult(data);
     } catch (err: any) {
       setResult({ error: err.message });
     }
     setLoading(false);
   };
 
+  return (
+    <div className="max-w-4xl mx-auto mt-10 p-6 border-2 border-zinc-800 rounded-3xl">
+      <h2 className="text-xl font-black text-white mb-4">ETSY DOĞRUDAN BAĞLANTI TESTİ</h2>
+      <button 
+        onClick={handleTest} 
+        className="bg-emerald-500 text-black font-black px-6 py-2 rounded-lg hover:bg-emerald-400 mb-6"
+      >
+        {loading ? 'TEST EDİLİYOR...' : 'BAĞLANTIYI TEST ET'}
+      </button>
+      <div className="bg-black p-4 rounded-lg border border-zinc-800 h-[500px] overflow-auto text-left">
+        <pre className="text-[11px] text-emerald-400 font-mono whitespace-pre-wrap">
+          {result ? JSON.stringify(result, null, 2) : 'Sonuç burada görünecek...'}
+        </pre>
+      </div>
+    </div>
+  );
+};
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 border-2 border-zinc-800 rounded-3xl">
       <h2 className="text-xl font-black text-white mb-4">ETSY API & VERİTABANI TESTİ</h2>
